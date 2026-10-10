@@ -38,6 +38,7 @@ research-opportunity-portal/
 │   ├── src/
 │   │   ├── server.js     (routes, validation, status codes)
 │   │   └── db.js         (MySQL connection pool)
+│   ├── .env.example      (template for the .env file)
 │   └── package.json
 ├── frontend/
 │   └── index.html        (user interface)
@@ -80,8 +81,11 @@ If `mysql` is not recognized on your computer, open `database/schema.sql` in MyS
 cd backend
 npm install
 ```
+Copy the example file to create your own `.env` file:
 
-Create a file named `.env` inside the `backend` folder with the following content (use your own MySQL password):
+    copy .env.example .env
+
+(On Mac/Linux use `cp .env.example .env`.) Then open `.env` and replace `your_mysql_password` with your real MySQL password. The example file contains only placeholder values.
 
 ```
 DB_HOST=localhost
