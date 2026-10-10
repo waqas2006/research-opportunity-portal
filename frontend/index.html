@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research Opportunity Portal</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; color: #222; }
+  header { background: #1f4e79; color: #fff; padding: 16px 24px; }
+  main { max-width: 1000px; margin: 20px auto; padding: 0 16px; }
+  #message { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; display: none; }
+  .success { background: #d4edda; color: #155724; }
+  .error { background: #f8d7da; color: #721c24; }
+  .card, form, #details { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .card h3 { margin: 0 0 6px; }
+  .badge { padding: 2px 8px; border-radius: 10px; font-size: 12px; color: #fff; }
+  .Open { background: #2e8b57; } .Closed { background: #b22222; }
+  button { padding: 6px 12px; margin: 6px 6px 0 0; border: 0; border-radius: 4px; cursor: pointer; color: #fff; background: #1f4e79; }
+  button.danger { background: #b22222; } button.gray { background: #777; } button.warn { background: #c77d00; }
+  label { display: block; margin-top: 10px; font-weight: bold; font-size: 14px; }
+  input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; margin-top: 4px; }
+  #details { display: none; }
+</style>
+</head>
+<body>
+<header><h1>Research Opportunity Portal</h1></header>
+<main>
+  <div id="message"></div>
+
+  <button id="newBtn">+ New Opportunity</button>
+
+  <form id="form" style="display:none" novalidate>
+    <h2 id="formTitle">New Opportunity</h2>
+    <label>Title</label><input id="title">
+    <label>Description</label><textarea id="description" rows="3"></textarea>
+    <label>Research Area</label><input id="research_area">
+    <label>Faculty Name</label><input id="faculty_name">
+    <label>Department</label><input id="department">
+    <label>Required Skills</label><input id="required_skills">
+    <label>Positions</label><input id="positions" type="number" min="1">
+    <label>Deadline</label><input id="deadline" type="date">
+    <label>Status</label>
+    <select id="status"><option>Open</option><option>Closed</option></select>
+    <button type="submit">Save</button>
+    <button type="button" class="gray" id="cancelBtn">Cancel</button>
+  </form>
+
+  <div id="details"></div>
+  <h2>All Opportunities</h2>
+  <div id="list"></div>
+</main>
+
+<script>
+const API = 'http://localhost:3000/api/opportunities';
+const fields = ['title','description','research_area','faculty_name','department','required_skills','positions','deadline','status'];
+let editId = null;
+
+const $ = id => document.getElementById(id);
+
+// Prevents text from the database being interpreted as HTML
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function showMessage(text, type) {
+  const m = $('message');
+  m.textContent = text;
+  m.className = type;
+  m.style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+// One helper for every API call. Throws the server's error message on 4xx/5xx.
+async function request(url, options) {
+  let res;
+  try { res = await fetch(url, options); }
+  catch { throw new Error('Cannot reach the server. Is the backend running?'); }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+const jsonOptions = (method, body) => ({
+  method,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body)
+});
+
+async function loadAll() {
+  try {
+    const rows = await request(API);
+    $('list').innerHTML = rows.length === 0 ? '<p>No opportunities yet.</p>' : rows.map(o => `
+      <div class="card">
+        <h3>${esc(o.title)} <span class="badge ${esc(o.status)}">${esc(o.status)}</span></h3>
+        <div>${esc(o.faculty_name)} &middot; ${esc(o.department)} &middot; Deadline: ${esc(o.deadline)}</div>
+        <button onclick="viewOne(${o.id})">View</button>
+        <button class="gray" onclick="editOne(${o.id})">Edit</button>
+        ${o.status === 'Open' ? `<button class="warn" onclick="closeOne(${o.id})">Close</button>` : ''}
+        <button class="danger" onclick="deleteOne(${o.id})">Delete</button>
+      </div>`).join('');
+  } catch (e) { showMessage(e.message, 'error'); }
+}
+
+async function viewOne(id) {
+  try {
+    const o = await request(`${API}/${id}`);
+    $('details').style.display = 'block';
+    $('details').innerHTML = `
+      <h2>${esc(o.title)} <span class="badge ${esc(o.status)}">${esc(o.status)}</span></h2>
+      <p>${esc(o.description)}</p>
+      <p><b>Area:</b> ${esc(o.research_area)}</p>
+      <p><b>Faculty:</b> ${esc(o.faculty_name)} (${esc(o.department)})</p>
+      <p><b>Skills:</b> ${esc(o.required_skills)}</p>
+      <p><b>Positions:</b> ${esc(o.positions)}</p>
+      <p><b>Deadline:</b> ${esc(o.deadline)}</p>
+      <button class="gray" onclick="$('details').style.display='none'">Hide</button>`;
+    $('details').scrollIntoView();
+  } catch (e) { showMessage(e.message, 'error'); loadAll(); }
+}
+
+function openForm(title) {
+  $('formTitle').textContent = title;
+  $('form').style.display = 'block';
+  $('form').scrollIntoView();
+}
+
+$('newBtn').onclick = () => {
+  editId = null;
+  $('form').reset();
+  openForm('New Opportunity');
+};
+
+$('cancelBtn').onclick = () => { $('form').style.display = 'none'; };
+
+async function editOne(id) {
+  try {
+    const o = await request(`${API}/${id}`);
+    editId = id;
+    fields.forEach(f => $(f).value = o[f]);
+    openForm('Edit Opportunity');
+  } catch (e) { showMessage(e.message, 'error'); loadAll(); }
+}
+
+$('form').onsubmit = async (event) => {
+  event.preventDefault();
+  const body = {};
+  fields.forEach(f => body[f] = $(f).value.trim());
+
+  // Frontend validation (the backend validates again)
+  const missing = fields.filter(f => !body[f]);
+  if (missing.length) return showMessage('Please fill in: ' + missing.join(', '), 'error');
+  if (!Number.isInteger(Number(body.positions)) || Number(body.positions) < 1)
+    return showMessage('Positions must be a positive whole number', 'error');
+
+  try {
+    if (editId) {
+      await request(`${API}/${editId}`, jsonOptions('PUT', body));
+      showMessage('Opportunity updated successfully', 'success');
+    } else {
+      await request(API, jsonOptions('POST', body));
+      showMessage('Opportunity created successfully', 'success');
+    }
+    $('form').style.display = 'none';
+    loadAll();
+  } catch (e) { showMessage(e.message, 'error'); }
+};
+
+async function closeOne(id) {
+  try {
+    await request(`${API}/${id}`, jsonOptions('PUT', { status: 'Closed' }));
+    showMessage('Opportunity closed', 'success');
+    loadAll();
+  } catch (e) { showMessage(e.message, 'error'); }
+}
+
+async function deleteOne(id) {
+  if (!confirm('Delete this opportunity?')) return;
+  try {
+    await request(`${API}/${id}`, { method: 'DELETE' });
+    showMessage('Opportunity deleted', 'success');
+    $('details').style.display = 'none';
+    loadAll();
+  } catch (e) { showMessage(e.message, 'error'); }
+}
+
+loadAll();
+</script>
+</body>
+</html>
