@@ -1,0 +1,81 @@
+{
+  "info": {
+    "name": "Research Opportunity Portal",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api/opportunities" }
+  ],
+  "item": [
+    {
+      "name": "1. Create opportunity (A)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"AI for Healthcare\",\n  \"description\": \"Build ML models for X-ray analysis\",\n  \"research_area\": \"Artificial Intelligence\",\n  \"faculty_name\": \"Dr. Ahmed\",\n  \"department\": \"Computer Science\",\n  \"required_skills\": \"Python, ML\",\n  \"positions\": 2,\n  \"deadline\": \"2026-12-31\",\n  \"status\": \"Open\"\n}" },
+        "url": "{{baseUrl}}"
+      }
+    },
+    {
+      "name": "2. Create opportunity (B)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Cyber Security Analysis\",\n  \"description\": \"Study network intrusion detection\",\n  \"research_area\": \"Cyber Security\",\n  \"faculty_name\": \"Dr. Sara\",\n  \"department\": \"Software Engineering\",\n  \"required_skills\": \"Networking, Python\",\n  \"positions\": 3,\n  \"deadline\": \"2026-11-30\",\n  \"status\": \"Open\"\n}" },
+        "url": "{{baseUrl}}"
+      }
+    },
+    {
+      "name": "3. Create opportunity (C)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Smart Agriculture IoT\",\n  \"description\": \"Sensor based crop monitoring\",\n  \"research_area\": \"IoT\",\n  \"faculty_name\": \"Dr. Bilal\",\n  \"department\": \"Electrical Engineering\",\n  \"required_skills\": \"Arduino, C++\",\n  \"positions\": 1,\n  \"deadline\": \"2026-12-15\",\n  \"status\": \"Open\"\n}" },
+        "url": "{{baseUrl}}"
+      }
+    },
+    {
+      "name": "4. Get all opportunities",
+      "request": { "method": "GET", "url": "{{baseUrl}}" }
+    },
+    {
+      "name": "5. Get one opportunity (change the ID)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/1" }
+    },
+    {
+      "name": "6. Update opportunity (change the ID)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"AI for Healthcare (Updated)\",\n  \"positions\": 5\n}" },
+        "url": "{{baseUrl}}/1"
+      }
+    },
+    {
+      "name": "7. Close opportunity (change the ID)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"Closed\"\n}" },
+        "url": "{{baseUrl}}/1"
+      }
+    },
+    {
+      "name": "8. Delete opportunity (change the ID)",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/1" }
+    },
+    {
+      "name": "9. Get deleted opportunity (expect 404)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/1" }
+    },
+    {
+      "name": "10. Invalid data (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"\",\n  \"positions\": -5\n}" },
+        "url": "{{baseUrl}}"
+      }
+    }
+  ]
+}
